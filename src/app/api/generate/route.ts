@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { classifyIntent } from '@/lib/ai/intent-router';
 import { generateUgcVideo } from '@/lib/orchestrator/ugc-generator';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
