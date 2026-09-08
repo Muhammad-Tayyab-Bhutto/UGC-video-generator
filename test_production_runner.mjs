@@ -44,14 +44,22 @@ async function runTests() {
     inputProps: { hookText: 'TEST HOOK' },
     codec: 'h264',
     framesPerLambda: 120,
-    concurrency: 2,
     downloadBehavior: { type: 'play-in-browser' },
   };
   assert.strictEqual(sampleRenderConfig.region, 'us-east-1');
   assert.strictEqual(sampleRenderConfig.composition, 'UGCVideo');
   assert.strictEqual(sampleRenderConfig.codec, 'h264');
   assert.strictEqual(sampleRenderConfig.framesPerLambda, 120, 'framesPerLambda must be set conservatively to avoid Lambda concurrency throttling');
-  assert.strictEqual(sampleRenderConfig.concurrency, 2, 'concurrency limit must be set to 2 workers max');
+  assert.strictEqual(
+    sampleRenderConfig.concurrency,
+    undefined,
+    'concurrency must be undefined when framesPerLambda is set due to Remotion 4.0.522 mutual exclusivity'
+  );
+  assert.strictEqual(
+    !(sampleRenderConfig.framesPerLambda !== undefined && sampleRenderConfig.concurrency !== undefined),
+    true,
+    'Regression check: NOT (framesPerLambda !== undefined AND concurrency !== undefined)'
+  );
   console.log('✓ Test 3 PASS');
 
   // Test 4: downloadBehavior regression check

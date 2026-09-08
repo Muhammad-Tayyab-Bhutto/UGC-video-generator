@@ -89,7 +89,6 @@ async function main() {
     inputProps,
     codec: 'h264',
     framesPerLambda: 120,
-    concurrency: 2,
     downloadBehavior: {
       type: 'play-in-browser',
     },
