@@ -88,6 +88,8 @@ async function main() {
     composition: 'UGCVideo',
     inputProps,
     codec: 'h264',
+    framesPerLambda: 120,
+    concurrency: 2,
     downloadBehavior: {
       type: 'play-in-browser',
     },
