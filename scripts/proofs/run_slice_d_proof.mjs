@@ -1,4 +1,4 @@
-import { generateUgcVideo } from './dist/src/lib/orchestrator/ugc-generator.js';
+import { generateUgcVideo } from '../../dist/lib/orchestrator/ugc-generator.js';
 
 async function main() {
   const url = process.argv[2];

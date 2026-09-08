@@ -4,11 +4,10 @@ import { fileURLToPath } from 'url';
 import { VideoCompositionProps, VideoResult } from '../../types';
 import { validateVideoCompositionProps } from '../validation/composition-props-validator';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const _currentDirname = typeof __dirname !== 'undefined' ? __dirname : process.cwd();
 
 // Load .env.local manually into process.env if present
-const rootEnvPath = path.resolve(__dirname, '../../../.env.local');
+const rootEnvPath = path.resolve(_currentDirname, '../../../.env.local');
 if (fs.existsSync(rootEnvPath)) {
   const envContent = fs.readFileSync(rootEnvPath, 'utf-8');
   envContent.split('\n').forEach(line => {

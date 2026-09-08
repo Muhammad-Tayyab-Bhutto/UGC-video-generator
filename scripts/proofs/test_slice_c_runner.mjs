@@ -6,10 +6,10 @@ import {
   isPrivateIP,
   normalizeAndValidateUrlFormat,
   validateUrlSecurity,
-} from './dist/src/lib/security/url-security.js';
-import { safeFetchProductPage } from './dist/src/lib/scraper/safe-fetcher.js';
-import { extractProductPageData } from './dist/src/lib/scraper/product-extractor.js';
-import { validateProductIntelligenceRuntime } from './dist/src/lib/ai/gemini-analyzer.js';
+} from '../../dist/lib/security/url-security.js';
+import { safeFetchProductPage } from '../../dist/lib/scraper/safe-fetcher.js';
+import { extractProductPageData } from '../../dist/lib/scraper/product-extractor.js';
+import { validateProductIntelligenceRuntime } from '../../dist/lib/ai/gemini-analyzer.js';
 
 async function runSliceCTests() {
   console.log('--- RUNNING SLICE C AUTOMATED TESTS ---');

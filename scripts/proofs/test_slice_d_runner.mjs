@@ -1,6 +1,6 @@
 import assert from 'assert';
-import { resolveAssets } from './dist/src/lib/assets/asset-resolver.js';
-import { buildVideoCompositionProps } from './dist/src/lib/assets/composition-props-builder.js';
+import { resolveAssets } from '../../dist/lib/assets/asset-resolver.js';
+import { buildVideoCompositionProps } from '../../dist/lib/assets/composition-props-builder.js';
 
 async function runSliceDTests() {
   console.log('--- RUNNING SLICE D AUTOMATED TESTS ---');

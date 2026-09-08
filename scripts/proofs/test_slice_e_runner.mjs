@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { classifyIntent, extractUrlFromText } from './dist/src/lib/ai/intent-router.js';
+import { classifyIntent, extractUrlFromText } from '../../dist/lib/ai/intent-router.js';
 
 async function runSliceETests() {
   console.log('--- RUNNING SLICE E AUTOMATED TESTS ---');

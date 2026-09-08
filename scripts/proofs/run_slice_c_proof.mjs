@@ -1,4 +1,4 @@
-import { processProductUrl } from './dist/src/lib/intelligence/pipeline.js';
+import { processProductUrl } from '../../dist/lib/intelligence/pipeline.js';
 
 async function main() {
   const url = process.argv[2];

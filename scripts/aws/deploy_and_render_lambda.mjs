@@ -1,4 +1,4 @@
-import { renderUgcVideo } from './dist/src/lib/renderer/render-ugc-video.js';
+import { renderUgcVideo } from '../../dist/lib/renderer/render-ugc-video.js';
 
 async function main() {
   console.log('--- REMOTION LAMBDA PRODUCTION RENDER PROOF ---');

@@ -2,10 +2,11 @@ import assert from 'assert';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { validateVideoCompositionProps } from './dist/src/lib/validation/composition-props-validator.js';
+import { validateVideoCompositionProps } from '../../dist/lib/validation/composition-props-validator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '../../');
 
 async function runTests() {
   console.log('--- RUNNING AUTOMATED UNIT & CONTRACT TESTS ---');
@@ -91,14 +92,14 @@ async function runTests() {
 
   // Test 7: Security regression contract
   console.log('Running Test 7: Security regression contract...');
-  const runnerSource = fs.readFileSync(path.join(__dirname, 'src/lib/renderer/render-ugc-video.ts'), 'utf-8');
+  const runnerSource = fs.readFileSync(path.join(projectRoot, 'src/lib/renderer/render-ugc-video.ts'), 'utf-8');
   assert.strictEqual(runnerSource.includes('AdministratorAccess'), false, 'Runner must not request AdministratorAccess');
   assert.strictEqual(runnerSource.includes('AWS_SECRET_ACCESS_KEY='), false, 'Runner must not hardcode secret keys');
   console.log('✓ Test 7 PASS');
 
   // Test 8: Four UGC layer composition contract
   console.log('Running Test 8: Four UGC layer composition contract...');
-  const compSource = fs.readFileSync(path.join(__dirname, 'src/remotion/Composition.tsx'), 'utf-8');
+  const compSource = fs.readFileSync(path.join(projectRoot, 'src/remotion/Composition.tsx'), 'utf-8');
   assert.strictEqual(compSource.includes('OffthreadVideo') || compSource.includes('Img'), true, 'Layer 1: Background photo/video present');
   assert.strictEqual(compSource.includes('hookText') && compSource.includes('bodyText') && compSource.includes('ctaText'), true, 'Layer 2: Text overlay present');
   assert.strictEqual(compSource.includes('Audio'), true, 'Layer 3: Audio present');
@@ -107,7 +108,7 @@ async function runTests() {
 
   // Test 9: Composition metadata contract
   console.log('Running Test 9: Composition metadata specs...');
-  const rootSource = fs.readFileSync(path.join(__dirname, 'src/remotion/Root.tsx'), 'utf-8');
+  const rootSource = fs.readFileSync(path.join(projectRoot, 'src/remotion/Root.tsx'), 'utf-8');
   assert.strictEqual(rootSource.includes('width={1080}'), true, 'Width must be 1080');
   assert.strictEqual(rootSource.includes('height={1920}'), true, 'Height must be 1920');
   assert.strictEqual(rootSource.includes('fps={30}'), true, 'FPS must be 30');
@@ -159,17 +160,17 @@ async function runTests() {
   // Test 12: Include Slice C Unit & Security Tests
   console.log('Running Test 12: Executing Slice C Unit & Security test suite...');
   const { execSync } = await import('child_process');
-  execSync('node test_slice_c_runner.mjs', { stdio: 'inherit' });
+  execSync('node scripts/proofs/test_slice_c_runner.mjs', { stdio: 'inherit', cwd: projectRoot });
   console.log('✓ Test 12 PASS');
 
   // Test 13: Include Slice D Asset Resolution Tests
   console.log('Running Test 13: Executing Slice D Asset Resolution test suite...');
-  execSync('node test_slice_d_runner.mjs', { stdio: 'inherit' });
+  execSync('node scripts/proofs/test_slice_d_runner.mjs', { stdio: 'inherit', cwd: projectRoot });
   console.log('✓ Test 13 PASS');
 
   // Test 14: Include Slice E Intent Routing Tests
   console.log('Running Test 14: Executing Slice E Intent Routing test suite...');
-  execSync('node test_slice_e_runner.mjs', { stdio: 'inherit' });
+  execSync('node scripts/proofs/test_slice_e_runner.mjs', { stdio: 'inherit', cwd: projectRoot });
   console.log('✓ Test 14 PASS');
 
   console.log('\n==================================================');
