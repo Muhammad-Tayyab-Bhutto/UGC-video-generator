@@ -35,11 +35,11 @@ async function main() {
   const { bundle } = await import('@remotion/bundler');
   const {
     deployFunction,
-    deploySite,
+    deploySiteFromBundle,
     getOrCreateBucket,
     renderMediaOnLambda,
     getRenderProgress,
-  } = await import('@remotion/lambda/deploy');
+  } = await import('@remotion/lambda');
 
   console.log('[STEP 2/5] Ensuring S3 Bucket exists in region:', region);
   const { bucketName } = await getOrCreateBucket({ region });
@@ -58,11 +58,12 @@ async function main() {
   const entryPoint = path.join(__dirname, 'src/remotion/index.ts');
   const bundleLocation = await bundle({ entryPoint });
 
-  const { siteName } = await deploySite({
+  const { siteName } = await deploySiteFromBundle({
     bucketName,
-    entryPoint,
+    bundleDir: bundleLocation,
     region,
     siteName: 'ugc-video-generator-site',
+    privacy: 'no-acl',
   });
   console.log('SITE_DEPLOYED:', siteName);
 
