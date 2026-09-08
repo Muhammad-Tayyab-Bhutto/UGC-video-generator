@@ -40,12 +40,21 @@ export async function POST(req: NextRequest) {
     } catch (genErr: unknown) {
       const msg = genErr instanceof Error ? genErr.message : String(genErr);
       
+      // Server-side diagnostic log (Secrets omitted)
+      console.error('[ugc-generation-failure]', {
+        extractedUrl: productUrl,
+        errorMessage: msg,
+        timestamp: new Date().toISOString(),
+      });
+      
       // Return safe, user-friendly error messages based on failure stage
       let safeError = "I understood the product request, but video generation failed. Please check the URL and try again.";
       if (msg.includes('Security validation failed') || msg.includes('Forbidden protocol')) {
         safeError = "That URL doesn't look like a public product page. Please try a valid public website URL.";
-      } else if (msg.includes('HTTP fetch failed') || msg.includes('Could not resolve DNS')) {
+      } else if (msg.includes('HTTP fetch failed') || msg.includes('Could not resolve DNS') || msg.includes('EAI_AGAIN')) {
         safeError = "I couldn't reach that product page. Please ensure the website is publicly available.";
+      } else if (msg.includes('GEMINI_API_KEY missing')) {
+        safeError = "AI product intelligence service is temporarily unconfigured.";
       }
 
       return NextResponse.json({
@@ -55,6 +64,7 @@ export async function POST(req: NextRequest) {
       }, { status: 422 });
     }
   } catch (err: unknown) {
+    console.error('[api-route-error]', err instanceof Error ? err.message : String(err));
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
