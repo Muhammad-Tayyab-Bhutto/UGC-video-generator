@@ -162,8 +162,13 @@ async function runTests() {
   execSync('node test_slice_c_runner.mjs', { stdio: 'inherit' });
   console.log('✓ Test 12 PASS');
 
+  // Test 13: Include Slice D Asset Resolution Tests
+  console.log('Running Test 13: Executing Slice D Asset Resolution test suite...');
+  execSync('node test_slice_d_runner.mjs', { stdio: 'inherit' });
+  console.log('✓ Test 13 PASS');
+
   console.log('\n==================================================');
-  console.log('ALL 12 AUTOMATED UNIT, SECURITY & CONTRACT TESTS PASSED!');
+  console.log('ALL 13 AUTOMATED UNIT, SECURITY & CONTRACT TESTS PASSED!');
   console.log('==================================================\n');
 }
 

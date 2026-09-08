@@ -22,26 +22,39 @@ export interface IntentResult {
   replyText?: string;
 }
 
-export interface ProductAnalysis {
-  url: string;
+export interface ProductPageData {
+  requestedUrl: string;
+  finalUrl: string;
   title: string;
   description: string;
-  brandName: string;
-  tagline: string;
-  primaryBenefit: string;
+  siteName?: string;
+  h1?: string;
+  headings: string[];
+  text: string;
+  images: Array<{
+    url: string;
+    source: 'og:image' | 'twitter:image' | 'hero-image' | 'page-image';
+  }>;
+}
+
+export interface ProductAnalysis {
+  productName: string;
+  oneLiner: string;
   targetAudience: string;
+  primaryBenefit: string;
   keyFeatures: string[];
-  visualMood: string;
-  imageUrl?: string;
+  tone: string;
+  category: string;
 }
 
 export interface CreativePlan {
   hookText: string;
   bodyText: string;
   ctaText: string;
-  backgroundSearchQuery: string;
+  visualKeywords: string[];
   gifSearchQuery: string;
-  audioMood: 'upbeat' | 'energetic' | 'calm' | 'corporate';
+  gifIntent: string;
+  audioMood: 'upbeat' | 'playful' | 'focused' | 'energetic' | 'calm' | 'dramatic';
 }
 
 export interface ResolvedAssets {
@@ -49,6 +62,9 @@ export interface ResolvedAssets {
   backgroundType: 'video' | 'image';
   gifUrl: string;
   audioUrl: string;
+  backgroundSource: 'product-image' | 'pexels' | 'fallback';
+  gifSource: 'giphy' | 'fallback';
+  audioSource: 'bundled';
 }
 
 export interface VideoCompositionProps {
@@ -78,4 +94,12 @@ export interface VideoResult {
   thumbnailUrl?: string;
   durationSeconds: number;
   title: string;
+}
+
+export interface UgcGenerationResult {
+  product: ProductAnalysis;
+  creativePlan: CreativePlan;
+  assets: ResolvedAssets;
+  renderId: string;
+  videoUrl: string;
 }

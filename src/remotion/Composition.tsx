@@ -6,6 +6,7 @@ import {
   OffthreadVideo,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
@@ -238,7 +239,12 @@ export const MainComposition: React.FC<VideoCompositionProps> = ({
       </AbsoluteFill>
 
       {/* 4. Audio Layer */}
-      {audioUrl && <Audio src={audioUrl} volume={0.8} />}
+      {audioUrl && (
+        <Audio
+          src={audioUrl.startsWith('/') ? staticFile(audioUrl) : audioUrl}
+          volume={0.8}
+        />
+      )}
     </AbsoluteFill>
   );
 };
