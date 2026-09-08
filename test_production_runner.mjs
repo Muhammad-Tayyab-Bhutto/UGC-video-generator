@@ -2,6 +2,7 @@ import assert from 'assert';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { validateVideoCompositionProps } from './dist/src/lib/validation/composition-props-validator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,7 +10,7 @@ const __dirname = path.dirname(__filename);
 async function runTests() {
   console.log('--- RUNNING AUTOMATED UNIT & CONTRACT TESTS ---');
 
-  // Test 1: Serve URL selection
+  // Test 1: Serve URL selection contract
   console.log('Running Test 1: Serve URL selection contract...');
   const mockDeploySiteOutput = {
     serveUrl: 'https://remotionlambda-useast1-jwc4yc5wbb.s3.us-east-1.amazonaws.com/sites/ugc-video-generator-site/index.html',
@@ -34,7 +35,7 @@ async function runTests() {
   assert.strictEqual(renderInputServeUrl, mockDeploySiteOutput.serveUrl, 'renderMediaOnLambda must consume deploySiteFromBundle serveUrl');
   console.log('✓ Test 2 PASS');
 
-  // Test 3: Render configuration parameter check
+  // Test 3: Render configuration parameter check & concurrency exclusivity
   console.log('Running Test 3: Render configuration parameter contract...');
   const sampleRenderConfig = {
     region: 'us-east-1',
@@ -53,12 +54,7 @@ async function runTests() {
   assert.strictEqual(
     sampleRenderConfig.concurrency,
     undefined,
-    'concurrency must be undefined when framesPerLambda is set due to Remotion 4.0.522 mutual exclusivity'
-  );
-  assert.strictEqual(
-    !(sampleRenderConfig.framesPerLambda !== undefined && sampleRenderConfig.concurrency !== undefined),
-    true,
-    'Regression check: NOT (framesPerLambda !== undefined AND concurrency !== undefined)'
+    'concurrency must be undefined when framesPerLambda is set'
   );
   console.log('✓ Test 3 PASS');
 
@@ -95,12 +91,12 @@ async function runTests() {
 
   // Test 7: Security regression contract
   console.log('Running Test 7: Security regression contract...');
-  const runnerSource = fs.readFileSync(path.join(__dirname, 'deploy_and_render_lambda.mjs'), 'utf-8');
+  const runnerSource = fs.readFileSync(path.join(__dirname, 'src/lib/renderer/render-ugc-video.ts'), 'utf-8');
   assert.strictEqual(runnerSource.includes('AdministratorAccess'), false, 'Runner must not request AdministratorAccess');
   assert.strictEqual(runnerSource.includes('AWS_SECRET_ACCESS_KEY='), false, 'Runner must not hardcode secret keys');
   console.log('✓ Test 7 PASS');
 
-  // Test 8: Composition contract
+  // Test 8: Four UGC layer composition contract
   console.log('Running Test 8: Four UGC layer composition contract...');
   const compSource = fs.readFileSync(path.join(__dirname, 'src/remotion/Composition.tsx'), 'utf-8');
   assert.strictEqual(compSource.includes('OffthreadVideo') || compSource.includes('Img'), true, 'Layer 1: Background photo/video present');
@@ -118,15 +114,52 @@ async function runTests() {
   assert.strictEqual(rootSource.includes('durationInFrames={210}'), true, 'Duration must be 210 frames (~7s)');
   console.log('✓ Test 9 PASS');
 
-  // Test 10: Input validation contract
-  console.log('Running Test 10: Environment credentials validation...');
-  const checkCreds = (env) => Boolean(env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY);
-  assert.strictEqual(checkCreds({}), false, 'Empty environment fails validation');
-  assert.strictEqual(checkCreds({ AWS_ACCESS_KEY_ID: 'key', AWS_SECRET_ACCESS_KEY: 'secret' }), true, 'Valid environment passes');
+  // Test 10: Input validation contract (Valid vs Invalid props)
+  console.log('Running Test 10: VideoCompositionProps validation tests...');
+  const validProps = {
+    hookText: 'Your to-do list shouldn\'t feel like another job.',
+    bodyText: 'Plan your day. Stay focused. Finish what matters.',
+    ctaText: 'Get your focus back.',
+    backgroundUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1080&h=1920&fit=crop',
+    backgroundType: 'image',
+    gifUrl: 'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif',
+    audioUrl: 'https://example.com/audio.mp3',
+    durationInFrames: 210,
+    fps: 30,
+  };
+  const validated = validateVideoCompositionProps(validProps);
+  assert.strictEqual(validated.hookText, validProps.hookText);
+  assert.strictEqual(validated.backgroundType, 'image');
+
+  // Test invalid props rejections
+  assert.throws(() => validateVideoCompositionProps({ ...validProps, hookText: '' }), /hookText/);
+  assert.throws(() => validateVideoCompositionProps({ ...validProps, bodyText: '' }), /bodyText/);
+  assert.throws(() => validateVideoCompositionProps({ ...validProps, ctaText: '' }), /ctaText/);
+  assert.throws(() => validateVideoCompositionProps({ ...validProps, backgroundType: 'audio' }), /backgroundType/);
+  assert.throws(() => validateVideoCompositionProps({ ...validProps, backgroundUrl: 'not-a-url' }), /backgroundUrl/);
+  assert.throws(() => validateVideoCompositionProps({ ...validProps, gifUrl: 'invalid' }), /gifUrl/);
   console.log('✓ Test 10 PASS');
 
+  // Test 11: Second Non-CalAI Fixture (FocusFlow)
+  console.log('Running Test 11: Non-CalAI Second Fixture (FocusFlow) contract...');
+  const focusFlowFixture = {
+    hookText: 'Your to-do list shouldn\'t feel like another job.',
+    bodyText: 'Plan your day. Stay focused. Finish what matters.',
+    ctaText: 'Get your focus back.',
+    backgroundUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=1080&h=1920&fit=crop',
+    backgroundType: 'image',
+    gifUrl: 'https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif',
+    audioUrl: '',
+    durationInFrames: 210,
+    fps: 30,
+  };
+  const focusFlowValidated = validateVideoCompositionProps(focusFlowFixture);
+  assert.strictEqual(focusFlowValidated.hookText, "Your to-do list shouldn't feel like another job.");
+  assert.strictEqual(focusFlowValidated.ctaText, 'Get your focus back.');
+  console.log('✓ Test 11 PASS');
+
   console.log('\n==================================================');
-  console.log('ALL 10 AUTOMATED UNIT & CONTRACT TESTS PASSED!');
+  console.log('ALL 11 AUTOMATED UNIT & CONTRACT TESTS PASSED!');
   console.log('==================================================\n');
 }
 

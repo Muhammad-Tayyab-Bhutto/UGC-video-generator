@@ -1,75 +1,9 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Load .env.local manually into process.env if present
-if (fs.existsSync('.env.local')) {
-  const envContent = fs.readFileSync('.env.local', 'utf-8');
-  envContent.split('\n').forEach(line => {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith('#')) {
-      const eqIdx = trimmed.indexOf('=');
-      if (eqIdx !== -1) {
-        const key = trimmed.substring(0, eqIdx).trim();
-        const val = trimmed.substring(eqIdx + 1).trim();
-        process.env[key] = val;
-      }
-    }
-  });
-}
+import { renderUgcVideo } from './dist/src/lib/renderer/render-ugc-video.js';
 
 async function main() {
   console.log('--- REMOTION LAMBDA PRODUCTION RENDER PROOF ---');
-  const region = process.env.REMOTION_AWS_REGION || process.env.AWS_REGION || 'us-east-1';
-  process.env.AWS_REGION = region;
-
-  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-    console.error('ERROR: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY is missing from environment.');
-    process.exit(1);
-  }
-
-  console.log('[STEP 1/5] Importing Remotion modules...');
-  const { bundle } = await import('@remotion/bundler');
-  const {
-    deployFunction,
-    deploySiteFromBundle,
-    getOrCreateBucket,
-    renderMediaOnLambda,
-    getRenderProgress,
-  } = await import('@remotion/lambda');
-
-  console.log('[STEP 2/5] Ensuring S3 Bucket exists in region:', region);
-  const { bucketName } = await getOrCreateBucket({ region });
-  console.log('BUCKET_READY:', bucketName);
-
-  console.log('[STEP 3/5] Deploying Remotion Lambda Function...');
-  const { functionName } = await deployFunction({
-    region,
-    timeoutInSeconds: 120,
-    memorySizeInMb: 2048,
-    createCloudWatchLogGroup: true,
-  });
-  console.log('FUNCTION_DEPLOYED:', functionName);
-
-  console.log('[STEP 4/5] Bundling and Deploying Remotion Site to S3...');
-  const entryPoint = path.join(__dirname, 'src/remotion/index.ts');
-  const bundleLocation = await bundle({ entryPoint });
-
-  const { siteName, serveUrl } = await deploySiteFromBundle({
-    bucketName,
-    bundleDir: bundleLocation,
-    region,
-    siteName: 'ugc-video-generator-site',
-    privacy: 'no-acl',
-  });
-  console.log('SITE_DEPLOYED:', siteName);
-  console.log('SERVE_URL:', serveUrl);
-
-  console.log('[STEP 5/5] Triggering Production Render on Lambda...');
-  const inputProps = {
+  
+  const props = {
     hookText: 'CALORIES TRACKED FROM A PHOTO.',
     bodyText: 'Snap your meal & get full breakdown.',
     ctaText: 'TRY CALAI FREE',
@@ -81,52 +15,12 @@ async function main() {
     fps: 30,
   };
 
-  const { renderId, bucketName: renderBucket } = await renderMediaOnLambda({
-    region,
-    functionName,
-    serveUrl,
-    composition: 'UGCVideo',
-    inputProps,
-    codec: 'h264',
-    framesPerLambda: 120,
-    downloadBehavior: {
-      type: 'play-in-browser',
-    },
-  });
-
-  console.log('RENDER_STARTED');
-  console.log('RENDER_ID:', renderId);
-
-  console.log('Polling Render Progress...');
-  let completed = false;
-  let finalUrl = '';
-
-  while (!completed) {
-    await new Promise(r => setTimeout(r, 3000));
-    const progress = await getRenderProgress({
-      renderId,
-      bucketName: renderBucket,
-      functionName,
-      region,
-    });
-
-    const percent = Math.round((progress.overallProgress || 0) * 100);
-    console.log(`RENDER_PROGRESS: ${percent}%`);
-
-    if (progress.fatalErrorEncountered) {
-      console.error('RENDER_FAILED: Fatal error encountered during Lambda render:', progress.errors);
-      process.exit(1);
-    }
-
-    if (progress.done) {
-      completed = true;
-      finalUrl = progress.outputFile;
-    }
-  }
+  const result = await renderUgcVideo(props);
 
   console.log('\n==================================================');
   console.log('RENDER_COMPLETED');
-  console.log('OUTPUT_URL:', finalUrl);
+  console.log('RENDER_ID:', result.jobId);
+  console.log('OUTPUT_URL:', result.videoUrl);
   console.log('==================================================\n');
 }
 

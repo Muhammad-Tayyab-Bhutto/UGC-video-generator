@@ -1,13 +1,14 @@
 import React from 'react';
 import { Composition } from 'remotion';
 import { MainComposition } from './Composition';
+import { VideoCompositionProps } from '../types';
 
 export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
         id="UGCVideo"
-        component={MainComposition}
+        component={MainComposition as unknown as React.FC}
         durationInFrames={210}
         fps={30}
         width={1080}
