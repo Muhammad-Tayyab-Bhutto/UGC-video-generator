@@ -167,8 +167,13 @@ async function runTests() {
   execSync('node test_slice_d_runner.mjs', { stdio: 'inherit' });
   console.log('✓ Test 13 PASS');
 
+  // Test 14: Include Slice E Intent Routing Tests
+  console.log('Running Test 14: Executing Slice E Intent Routing test suite...');
+  execSync('node test_slice_e_runner.mjs', { stdio: 'inherit' });
+  console.log('✓ Test 14 PASS');
+
   console.log('\n==================================================');
-  console.log('ALL 13 AUTOMATED UNIT, SECURITY & CONTRACT TESTS PASSED!');
+  console.log('ALL 14 AUTOMATED UNIT, SECURITY & CONTRACT TESTS PASSED!');
   console.log('==================================================\n');
 }
 

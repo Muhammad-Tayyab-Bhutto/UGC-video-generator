@@ -1,5 +1,5 @@
-import { validateUrlSecurity, normalizeAndValidateUrlFormat } from '../security/url-security.js';
-import { ProductPageData, ProductAnalysis, CreativePlan, ResolvedAssets } from '../../types/index.js';
+import { validateUrlSecurity, normalizeAndValidateUrlFormat } from '@/lib/security/url-security';
+import { ProductPageData, ProductAnalysis, CreativePlan, ResolvedAssets } from '@/types';
 
 export interface ResolveAssetsInput {
   pageData: ProductPageData;

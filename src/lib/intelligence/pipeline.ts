@@ -1,6 +1,6 @@
-import { safeFetchProductPage } from '../scraper/safe-fetcher.js';
-import { extractProductPageData, ProductPageData } from '../scraper/product-extractor.js';
-import { analyzeProduct, ProductIntelligence } from '../ai/gemini-analyzer.js';
+import { safeFetchProductPage } from '@/lib/scraper/safe-fetcher';
+import { extractProductPageData, ProductPageData } from '@/lib/scraper/product-extractor';
+import { analyzeProduct, ProductIntelligence } from '@/lib/ai/gemini-analyzer';
 
 export interface IntelligencePipelineResult {
   pageData: ProductPageData;
