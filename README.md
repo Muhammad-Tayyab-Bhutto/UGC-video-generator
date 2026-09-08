@@ -28,6 +28,23 @@ Turn any product page into a short 7-second UGC-style video automatically. Built
 
 ---
 
+## Asynchronous System Architecture
+
+To prevent long-running media rendering from holding open web request connections and triggering serverless gateway timeouts (504s), UGC Studio uses an asynchronous request-processing separation pattern:
+
+```
+User -> Next.js Chat API (POST /api/generate) -> Product Intelligence -> Remotion Lambda (submit render)
+   ^                                                                              |
+   |                                                                              v
+   +---- Poll Status API (GET /api/generate/[jobId]) <---------------------- S3 Render Output
+```
+
+1. **Request Acceptance**: `POST /api/generate` performs fast URL security checks, product scraping, Gemini creative analysis, asset resolution, and submits the render job to AWS Lambda, returning `HTTP 202 Accepted` with a unique `jobId` in under 3 seconds.
+2. **Independent Processing**: AWS Lambda renders the 1080x1920 video asynchronously across distributed Lambda instances, uploading the MP4 directly to S3.
+3. **Status Polling**: The client polls `GET /api/generate/[jobId]` every 2.5 seconds to track render progress until S3 completion, displaying the vertical MP4 inline in the chat UI.
+
+---
+
 ## Security & SSRF Protection
 
 - **DNS-Resolved SSRF Guard**: Preflight DNS lookup (`dns.promises.lookup`) blocking loopback (`127.0.0.0/8`), private IPv4 (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local (`169.254.0.0/16`), unspecified (`0.0.0.0`), IPv6 (`::1`, `fc00::/7`, `fe80::/10`), IPv4-mapped IPv6, and AWS metadata endpoints (`169.254.169.254`).

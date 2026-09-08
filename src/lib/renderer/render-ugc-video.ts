@@ -24,8 +24,21 @@ if (fs.existsSync(rootEnvPath)) {
   });
 }
 
-export async function renderUgcVideo(rawProps: unknown): Promise<VideoResult> {
-  // 1. Validate composition props
+export interface StartRenderResult {
+  renderId: string;
+  bucketName: string;
+  functionName: string;
+  region: import('@remotion/lambda').AwsRegion;
+}
+
+export interface RenderStatusResult {
+  status: 'rendering' | 'completed' | 'failed';
+  progressPercent?: number;
+  videoUrl?: string;
+  error?: string;
+}
+
+export async function startUgcVideoRender(rawProps: unknown): Promise<StartRenderResult> {
   const validatedProps = validateVideoCompositionProps(rawProps);
 
   const region = (process.env.REMOTION_AWS_REGION || process.env.AWS_REGION || 'us-east-1') as import('@remotion/lambda').AwsRegion;
@@ -35,20 +48,16 @@ export async function renderUgcVideo(rawProps: unknown): Promise<VideoResult> {
     throw new Error('AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) missing from environment.');
   }
 
-  // 2. Import Remotion modules dynamically
   const { bundle } = await import('@remotion/bundler');
   const {
     deployFunction,
     deploySiteFromBundle,
     getOrCreateBucket,
     renderMediaOnLambda,
-    getRenderProgress,
   } = await import('@remotion/lambda');
 
-  // 3. Get or create S3 Bucket
   const { bucketName } = await getOrCreateBucket({ region });
 
-  // 4. Deploy Lambda Function
   const { functionName } = await deployFunction({
     region,
     timeoutInSeconds: 120,
@@ -56,14 +65,11 @@ export async function renderUgcVideo(rawProps: unknown): Promise<VideoResult> {
     createCloudWatchLogGroup: true,
   });
 
-  // 5. Serve URL resolution (Use existing deployed site if available, fallback to deploySiteFromBundle)
   let serveUrl = process.env.REMOTION_SERVE_URL;
   if (!serveUrl) {
-    // Standard Remotion Lambda S3 site URL format for us-east-1 / remotionlambda-useast1-jwc4yc5wbb
     serveUrl = `https://${bucketName}.s3.${region}.amazonaws.com/sites/ugc-video-generator-site/index.html`;
   }
 
-  // Fallback to bundler if static URL check fails locally in dev
   if (process.env.NODE_ENV === 'development' && process.env.REMOTION_FORCE_BUNDLE === 'true') {
     const entryPoint = path.resolve(process.cwd(), 'src/remotion/index.ts');
     const bundleLocation = await bundle({ entryPoint });
@@ -77,7 +83,6 @@ export async function renderUgcVideo(rawProps: unknown): Promise<VideoResult> {
     serveUrl = deployed.serveUrl;
   }
 
-  // 6. Trigger Render on Lambda using framesPerLambda exclusively
   const { renderId, bucketName: renderBucket } = await renderMediaOnLambda({
     region,
     functionName,
@@ -91,32 +96,96 @@ export async function renderUgcVideo(rawProps: unknown): Promise<VideoResult> {
     },
   });
 
-  // 7. Poll until complete
+  return {
+    renderId,
+    bucketName: renderBucket,
+    functionName,
+    region,
+  };
+}
+
+export async function checkUgcVideoRenderStatus(
+  renderId: string,
+  bucketName?: string,
+  functionName?: string,
+  regionParam?: string
+): Promise<RenderStatusResult> {
+  const region = (regionParam || process.env.REMOTION_AWS_REGION || process.env.AWS_REGION || 'us-east-1') as import('@remotion/lambda').AwsRegion;
+  process.env.AWS_REGION = region;
+
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    throw new Error('AWS credentials missing from environment.');
+  }
+
+  const { getOrCreateBucket, deployFunction, getRenderProgress } = await import('@remotion/lambda');
+
+  const resolvedBucket = bucketName || (await getOrCreateBucket({ region })).bucketName;
+  const resolvedFunction = functionName || (await deployFunction({
+    region,
+    timeoutInSeconds: 120,
+    memorySizeInMb: 2048,
+    createCloudWatchLogGroup: true,
+  })).functionName;
+
+  const progress = await getRenderProgress({
+    renderId,
+    bucketName: resolvedBucket,
+    functionName: resolvedFunction,
+    region,
+  });
+
+  if (progress.fatalErrorEncountered) {
+    const errorMsg = progress.errors.map(e => e.message).join('; ');
+    return {
+      status: 'failed',
+      error: `Lambda render failed: ${errorMsg}`,
+    };
+  }
+
+  if (progress.done) {
+    return {
+      status: 'completed',
+      progressPercent: 100,
+      videoUrl: progress.outputFile || '',
+    };
+  }
+
+  const overallProgress = Math.round((progress.overallProgress || 0) * 100);
+
+  return {
+    status: 'rendering',
+    progressPercent: overallProgress,
+  };
+}
+
+export async function renderUgcVideo(rawProps: unknown): Promise<VideoResult> {
+  const validatedProps = validateVideoCompositionProps(rawProps);
+  const startResult = await startUgcVideoRender(validatedProps);
+
   let completed = false;
   let finalUrl = '';
 
   while (!completed) {
     await new Promise(r => setTimeout(r, 3000));
-    const progress = await getRenderProgress({
-      renderId,
-      bucketName: renderBucket,
-      functionName,
-      region,
-    });
+    const statusResult = await checkUgcVideoRenderStatus(
+      startResult.renderId,
+      startResult.bucketName,
+      startResult.functionName,
+      startResult.region
+    );
 
-    if (progress.fatalErrorEncountered) {
-      const errorMsg = progress.errors.map(e => e.message).join('; ');
-      throw new Error(`Lambda render failed: ${errorMsg}`);
+    if (statusResult.status === 'failed') {
+      throw new Error(statusResult.error || 'Lambda render failed');
     }
 
-    if (progress.done) {
+    if (statusResult.status === 'completed') {
       completed = true;
-      finalUrl = progress.outputFile || '';
+      finalUrl = statusResult.videoUrl || '';
     }
   }
 
   return {
-    jobId: renderId,
+    jobId: startResult.renderId,
     videoUrl: finalUrl,
     durationSeconds: Math.round((validatedProps.durationInFrames || 210) / (validatedProps.fps || 30)),
     title: `${validatedProps.hookText} - UGC Video`,

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { classifyIntent } from '@/lib/ai/intent-router';
-import { generateUgcVideo } from '@/lib/orchestrator/ugc-generator';
+import { startUgcVideoGeneration } from '@/lib/orchestrator/ugc-generator';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,18 +25,29 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 3. Handle Product Video Request (Triggers full pipeline + Lambda render)
+    // 3. Handle Product Video Request (Triggers async Lambda submission & returns 202 Accepted)
     const productUrl = intentResult.extractedUrl;
 
     try {
-      const generationResult = await generateUgcVideo(productUrl);
+      const jobResult = await startUgcVideoGeneration(productUrl);
 
-      return NextResponse.json({
-        intent: 'PRODUCT_VIDEO_REQUEST',
-        extractedUrl: productUrl,
-        replyText: `Here is your UGC video for **${generationResult.product.productName}**!`,
-        result: generationResult,
-      });
+      return NextResponse.json(
+        {
+          intent: 'PRODUCT_VIDEO_REQUEST',
+          extractedUrl: productUrl,
+          replyText: `Analyzing **${jobResult.product.productName}** and rendering video...`,
+          job: {
+            jobId: jobResult.renderId,
+            bucketName: jobResult.bucketName,
+            functionName: jobResult.functionName,
+            status: 'rendering',
+            product: jobResult.product,
+            creativePlan: jobResult.creativePlan,
+            assets: jobResult.assets,
+          },
+        },
+        { status: 202 }
+      );
     } catch (genErr: unknown) {
       const msg = genErr instanceof Error ? genErr.message : String(genErr);
       

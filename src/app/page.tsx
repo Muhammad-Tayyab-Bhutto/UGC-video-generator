@@ -61,34 +61,11 @@ export default function Home() {
     ]);
 
     try {
-      // Step-by-step progress indicator timer
-      const progressSteps = [
-        'Analyzing product page & security checks...',
-        'Extracting page metadata & imagery...',
-        'Generating creative UGC hook and script...',
-        'Selecting visuals, reaction GIF & audio...',
-        'Rendering vertical 1080x1920 video on AWS Lambda...',
-      ];
-      let stepIdx = 0;
-
-      const progressInterval = setInterval(() => {
-        if (stepIdx < progressSteps.length - 1) {
-          stepIdx++;
-          setMessages(prev =>
-            prev.map(m =>
-              m.id === assistantMsgId ? { ...m, statusMessage: progressSteps[stepIdx] } : m
-            )
-          );
-        }
-      }, 3500);
-
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: trimmed }),
       });
-
-      clearInterval(progressInterval);
 
       const data = await response.json();
 
@@ -105,7 +82,12 @@ export default function Home() {
               : m
           )
         );
-      } else {
+        setIsGenerating(false);
+        return;
+      }
+
+      // If casual or capability conversation, finish immediately
+      if (response.status !== 202 || !data.job) {
         setMessages(prev =>
           prev.map(m =>
             m.id === assistantMsgId
@@ -113,12 +95,112 @@ export default function Home() {
                   ...m,
                   content: data.replyText || '',
                   statusMessage: undefined,
-                  videoUrl: data.result?.videoUrl,
-                  productName: data.result?.product?.productName,
                 }
               : m
           )
         );
+        setIsGenerating(false);
+        return;
+      }
+
+      // Handle async 202 Accepted generation job with polling
+      const { jobId, bucketName, functionName, product } = data.job;
+      const productName = product?.productName || 'product';
+
+      setMessages(prev =>
+        prev.map(m =>
+          m.id === assistantMsgId
+            ? {
+                ...m,
+                content: `Analyzing **${productName}** and rendering video...`,
+                statusMessage: 'Rendering vertical video on AWS Lambda (0%)...',
+                productName,
+              }
+            : m
+        )
+      );
+
+      // Poll status endpoint every 2.5s
+      const pollParams = new URLSearchParams();
+      if (bucketName) pollParams.set('bucket', bucketName);
+      if (functionName) pollParams.set('function', functionName);
+
+      let isFinished = false;
+      let attempts = 0;
+      const maxAttempts = 60; // 60 * 2.5s = 150s max client polling
+
+      while (!isFinished && attempts < maxAttempts) {
+        attempts++;
+        await new Promise(r => setTimeout(r, 2500));
+
+        try {
+          const statusRes = await fetch(`/api/generate/${jobId}?${pollParams.toString()}`);
+          const statusData = await statusRes.json();
+
+          if (!statusRes.ok || statusData.error) {
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === assistantMsgId
+                  ? {
+                      ...m,
+                      content: '',
+                      statusMessage: undefined,
+                      error: statusData.error || 'Video rendering failed on AWS Lambda.',
+                    }
+                  : m
+              )
+            );
+            isFinished = true;
+            break;
+          }
+
+          if (statusData.status === 'completed') {
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === assistantMsgId
+                  ? {
+                      ...m,
+                      content: `Here is your UGC video for **${productName}**!`,
+                      statusMessage: undefined,
+                      videoUrl: statusData.videoUrl,
+                    }
+                  : m
+              )
+            );
+            isFinished = true;
+            break;
+          }
+
+          // Update rendering progress percentage
+          const pct = statusData.progressPercent || 0;
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === assistantMsgId
+                ? {
+                    ...m,
+                    statusMessage: `Rendering vertical video on AWS Lambda (${pct}%)...`,
+                  }
+                : m
+            )
+          );
+        } catch {
+          // Soft retry on transient network errors
+          if (attempts >= maxAttempts) {
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === assistantMsgId
+                  ? {
+                      ...m,
+                      content: '',
+                      statusMessage: undefined,
+                      error: 'Connection timeout while checking render progress. Please try again.',
+                    }
+                  : m
+              )
+            );
+            isFinished = true;
+          }
+        }
       }
     } catch {
       setMessages(prev =>
