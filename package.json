@@ -12,6 +12,7 @@
     "remotion:render": "remotion render src/remotion/index.ts UGCVideo renders/output.mp4"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@remotion/bundler": "^4.0.260",
     "@remotion/cli": "^4.0.260",
     "@remotion/lambda": "^4.0.260",

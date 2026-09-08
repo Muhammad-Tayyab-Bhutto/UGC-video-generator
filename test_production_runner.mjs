@@ -156,10 +156,14 @@ async function runTests() {
   const focusFlowValidated = validateVideoCompositionProps(focusFlowFixture);
   assert.strictEqual(focusFlowValidated.hookText, "Your to-do list shouldn't feel like another job.");
   assert.strictEqual(focusFlowValidated.ctaText, 'Get your focus back.');
-  console.log('✓ Test 11 PASS');
+  // Test 12: Include Slice C Unit & Security Tests
+  console.log('Running Test 12: Executing Slice C Unit & Security test suite...');
+  const { execSync } = await import('child_process');
+  execSync('node test_slice_c_runner.mjs', { stdio: 'inherit' });
+  console.log('✓ Test 12 PASS');
 
   console.log('\n==================================================');
-  console.log('ALL 11 AUTOMATED UNIT & CONTRACT TESTS PASSED!');
+  console.log('ALL 12 AUTOMATED UNIT, SECURITY & CONTRACT TESTS PASSED!');
   console.log('==================================================\n');
 }
 
