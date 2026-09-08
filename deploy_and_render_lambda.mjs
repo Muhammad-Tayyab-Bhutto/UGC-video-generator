@@ -58,7 +58,7 @@ async function main() {
   const entryPoint = path.join(__dirname, 'src/remotion/index.ts');
   const bundleLocation = await bundle({ entryPoint });
 
-  const { siteName } = await deploySiteFromBundle({
+  const { siteName, serveUrl } = await deploySiteFromBundle({
     bucketName,
     bundleDir: bundleLocation,
     region,
@@ -66,6 +66,7 @@ async function main() {
     privacy: 'no-acl',
   });
   console.log('SITE_DEPLOYED:', siteName);
+  console.log('SERVE_URL:', serveUrl);
 
   console.log('[STEP 5/5] Triggering Production Render on Lambda...');
   const inputProps = {
@@ -83,7 +84,7 @@ async function main() {
   const { renderId, bucketName: renderBucket } = await renderMediaOnLambda({
     region,
     functionName,
-    serveUrl: siteName,
+    serveUrl,
     composition: 'UGCVideo',
     inputProps,
     codec: 'h264',
