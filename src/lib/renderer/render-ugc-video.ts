@@ -56,17 +56,26 @@ export async function renderUgcVideo(rawProps: unknown): Promise<VideoResult> {
     createCloudWatchLogGroup: true,
   });
 
-  // 5. Bundle & Deploy Remotion Site
-  const entryPoint = path.resolve(process.cwd(), 'src/remotion/index.ts');
-  const bundleLocation = await bundle({ entryPoint });
+  // 5. Serve URL resolution (Use existing deployed site if available, fallback to deploySiteFromBundle)
+  let serveUrl = process.env.REMOTION_SERVE_URL;
+  if (!serveUrl) {
+    // Standard Remotion Lambda S3 site URL format for us-east-1 / remotionlambda-useast1-jwc4yc5wbb
+    serveUrl = `https://${bucketName}.s3.${region}.amazonaws.com/sites/ugc-video-generator-site/index.html`;
+  }
 
-  const { siteName, serveUrl } = await deploySiteFromBundle({
-    bucketName,
-    bundleDir: bundleLocation,
-    region,
-    siteName: 'ugc-video-generator-site',
-    privacy: 'no-acl',
-  });
+  // Fallback to bundler if static URL check fails locally in dev
+  if (process.env.NODE_ENV === 'development' && process.env.REMOTION_FORCE_BUNDLE === 'true') {
+    const entryPoint = path.resolve(process.cwd(), 'src/remotion/index.ts');
+    const bundleLocation = await bundle({ entryPoint });
+    const deployed = await deploySiteFromBundle({
+      bucketName,
+      bundleDir: bundleLocation,
+      region,
+      siteName: 'ugc-video-generator-site',
+      privacy: 'no-acl',
+    });
+    serveUrl = deployed.serveUrl;
+  }
 
   // 6. Trigger Render on Lambda using framesPerLambda exclusively
   const { renderId, bucketName: renderBucket } = await renderMediaOnLambda({
