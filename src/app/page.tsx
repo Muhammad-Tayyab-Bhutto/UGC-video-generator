@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ChatMessageItem } from '@/components/ChatMessageItem';
+import { Sparkles, Send, Zap, Rocket, Globe, Film, CheckCircle2 } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -18,6 +19,7 @@ export default function Home() {
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -145,106 +147,140 @@ export default function Home() {
 
   const handlePresetClick = (presetText: string) => {
     setInput(presetText);
+    textareaRef.current?.focus();
   };
 
   return (
-    <main className="flex flex-col h-screen bg-zinc-950 text-zinc-100 font-sans antialiased">
+    <div className="flex flex-col min-h-dvh bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-pink-500/30 selection:text-pink-200">
+      
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/80 bg-zinc-900/50 backdrop-blur-md">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md">
+      <header className="sticky top-0 z-20 flex items-center justify-between px-4 sm:px-8 py-3.5 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-pink-600 via-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-pink-500/20">
             8x
           </div>
           <div>
-            <h1 className="text-base font-bold text-white tracking-wide">UGC Studio</h1>
-            <p className="text-xs text-zinc-400">AI Product Video Generator</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-semibold text-white tracking-tight">UGC Studio</h1>
+              <span className="text-[10px] font-mono uppercase tracking-wider text-pink-400 bg-pink-500/10 border border-pink-500/20 px-2 py-0.5 rounded-full">
+                AI Engine
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-950 text-emerald-400 border border-emerald-800/60">
-            AWS Lambda Ready
+
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-zinc-900 border border-zinc-800 text-zinc-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Ready to Create</span>
           </span>
         </div>
       </header>
 
       {/* Main Conversation Thread Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 max-w-3xl w-full mx-auto space-y-4">
-        {/* Empty State / Welcome Screen */}
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-            <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-3xl mb-4 shadow-xl">
-              🎬
+      <main className="flex-1 flex flex-col justify-between max-w-3xl w-full mx-auto px-4 sm:px-6 pt-4 pb-24">
+        <div className="flex-1 space-y-4">
+          
+          {/* Centered Empty State */}
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center min-h-[55vh] text-center px-4 my-auto animate-in fade-in zoom-in-95 duration-300">
+              <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-pink-400 mb-5 shadow-xl shadow-pink-500/5">
+                <Film className="w-7 h-7" />
+              </div>
+
+              <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-3">
+                Turn any product into a UGC video
+              </h2>
+
+              <p className="text-sm text-zinc-400 max-w-lg mb-8 leading-relaxed">
+                Paste any product URL. The AI will extract key features, write a scroll-stopping hook, select visuals and audio, and render a high-converting 9:16 social video.
+              </p>
+
+              {/* Suggestion Chips */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-xl">
+                <button
+                  type="button"
+                  onClick={() => handlePresetClick('Create a UGC video for https://linear.app')}
+                  className="p-3.5 text-left bg-zinc-900/90 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 rounded-xl transition duration-150 flex flex-col justify-between gap-2 group shadow-sm hover:shadow-md cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-pink-400" />
+                    <span className="font-semibold text-xs text-white group-hover:text-pink-300 transition">Linear App</span>
+                  </div>
+                  <span className="text-[11px] text-zinc-500 truncate">https://linear.app</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePresetClick('Make a video for https://raycast.com')}
+                  className="p-3.5 text-left bg-zinc-900/90 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 rounded-xl transition duration-150 flex flex-col justify-between gap-2 group shadow-sm hover:shadow-md cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Rocket className="w-4 h-4 text-purple-400" />
+                    <span className="font-semibold text-xs text-white group-hover:text-purple-300 transition">Raycast</span>
+                  </div>
+                  <span className="text-[11px] text-zinc-500 truncate">https://raycast.com</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePresetClick('Create a UGC video for https://warp.dev')}
+                  className="p-3.5 text-left bg-zinc-900/90 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 rounded-xl transition duration-150 flex flex-col justify-between gap-2 group shadow-sm hover:shadow-md cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-emerald-400" />
+                    <span className="font-semibold text-xs text-white group-hover:text-emerald-300 transition">Any Product URL</span>
+                  </div>
+                  <span className="text-[11px] text-zinc-500 truncate">https://warp.dev</span>
+                </button>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">Turn any product into a UGC video</h2>
-            <p className="text-sm text-zinc-400 max-w-md mb-8 leading-relaxed">
-              Send me a product landing page URL and I’ll extract product features, write a hook & copy, pick visuals & audio, and render a high-converting video on AWS Lambda.
-            </p>
+          )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-md">
-              <button
-                type="button"
-                onClick={() => handlePresetClick('Create a UGC video for https://linear.app')}
-                className="p-3 text-left bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 rounded-xl transition text-xs text-zinc-300 flex flex-col space-y-1 group"
-              >
-                <span className="font-semibold text-white group-hover:text-pink-400">⚡ Linear App</span>
-                <span className="text-zinc-500">Create a UGC video for https://linear.app</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePresetClick('Make a video for https://raycast.com')}
-                className="p-3 text-left bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 rounded-xl transition text-xs text-zinc-300 flex flex-col space-y-1 group"
-              >
-                <span className="font-semibold text-white group-hover:text-pink-400">🚀 Raycast</span>
-                <span className="text-zinc-500">Make a video for https://raycast.com</span>
-              </button>
-            </div>
-          </div>
-        )}
+          {/* Message Thread */}
+          {messages.map(msg => (
+            <ChatMessageItem
+              key={msg.id}
+              role={msg.role}
+              content={msg.content}
+              videoUrl={msg.videoUrl}
+              productName={msg.productName}
+              statusMessage={msg.statusMessage}
+              error={msg.error}
+            />
+          ))}
 
-        {/* Message Thread */}
-        {messages.map(msg => (
-          <ChatMessageItem
-            key={msg.id}
-            role={msg.role}
-            content={msg.content}
-            videoUrl={msg.videoUrl}
-            productName={msg.productName}
-            statusMessage={msg.statusMessage}
-            error={msg.error}
-          />
-        ))}
+          <div ref={messagesEndRef} />
+        </div>
+      </main>
 
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Composer */}
-      <footer className="p-4 border-t border-zinc-800/80 bg-zinc-900/60 backdrop-blur-md">
+      {/* Input Composer Sticky Footer */}
+      <footer className="fixed bottom-0 left-0 right-0 z-20 p-4 border-t border-zinc-800/80 bg-zinc-950/85 backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="max-w-3xl w-full mx-auto relative flex items-center">
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isGenerating}
             placeholder="Paste a product URL or ask a question... (e.g. https://linear.app)"
             rows={1}
-            className="w-full resize-none bg-zinc-900 text-white placeholder-zinc-500 border border-zinc-700/80 focus:border-pink-500 focus:outline-none rounded-2xl py-3.5 pl-4 pr-14 text-sm shadow-inner transition disabled:opacity-50"
+            className="w-full resize-none bg-zinc-900/90 text-white placeholder-zinc-500 border border-zinc-800 focus:border-pink-500/80 focus:ring-1 focus:ring-pink-500/50 focus:outline-none rounded-2xl py-3.5 pl-4 pr-14 text-sm shadow-inner transition duration-200 disabled:opacity-50"
           />
           <button
             type="submit"
             disabled={!input.trim() || isGenerating}
             aria-label="Send message"
-            className="absolute right-2 p-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 disabled:bg-zinc-800 text-white disabled:text-zinc-600 transition shadow-md"
+            className="absolute right-2 p-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 disabled:bg-zinc-800/80 text-white disabled:text-zinc-600 transition duration-150 shadow-md shadow-pink-600/20 disabled:shadow-none cursor-pointer disabled:cursor-not-allowed"
           >
             {isGenerating ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-              </svg>
+              <Send className="w-4 h-4" />
             )}
           </button>
         </form>
       </footer>
-    </main>
+    </div>
   );
 }
