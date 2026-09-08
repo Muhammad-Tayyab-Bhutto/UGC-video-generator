@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env.local manually into process.env
+// Load .env.local manually into process.env if present
 if (fs.existsSync('.env.local')) {
   const envContent = fs.readFileSync('.env.local', 'utf-8');
   envContent.split('\n').forEach(line => {
@@ -26,7 +26,12 @@ async function main() {
   const region = process.env.REMOTION_AWS_REGION || process.env.AWS_REGION || 'us-east-1';
   process.env.AWS_REGION = region;
 
-  console.log('Importing @remotion/lambda and @remotion/bundler...');
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    console.error('ERROR: AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY is missing from environment.');
+    process.exit(1);
+  }
+
+  console.log('[STEP 1/5] Importing Remotion modules...');
   const { bundle } = await import('@remotion/bundler');
   const {
     deployFunction,
@@ -36,20 +41,20 @@ async function main() {
     getRenderProgress,
   } = await import('@remotion/lambda/deploy');
 
-  console.log('1. Ensuring S3 Bucket exists in region:', region);
+  console.log('[STEP 2/5] Ensuring S3 Bucket exists in region:', region);
   const { bucketName } = await getOrCreateBucket({ region });
-  console.log('S3 Bucket confirmed:', bucketName);
+  console.log('BUCKET_READY:', bucketName);
 
-  console.log('2. Deploying Remotion Lambda Function...');
+  console.log('[STEP 3/5] Deploying Remotion Lambda Function...');
   const { functionName } = await deployFunction({
     region,
     timeoutInSeconds: 120,
     memorySizeInMb: 2048,
     createCloudWatchLogGroup: true,
   });
-  console.log('Lambda Function deployed:', functionName);
+  console.log('FUNCTION_DEPLOYED:', functionName);
 
-  console.log('3. Bundling and Deploying Remotion Site to S3...');
+  console.log('[STEP 4/5] Bundling and Deploying Remotion Site to S3...');
   const entryPoint = path.join(__dirname, 'src/remotion/index.ts');
   const bundleLocation = await bundle({ entryPoint });
 
@@ -59,9 +64,9 @@ async function main() {
     region,
     siteName: 'ugc-video-generator-site',
   });
-  console.log('Remotion Site deployed to S3:', siteName);
+  console.log('SITE_DEPLOYED:', siteName);
 
-  console.log('4. Triggering Production Render on Lambda...');
+  console.log('[STEP 5/5] Triggering Production Render on Lambda...');
   const inputProps = {
     hookText: 'CALORIES TRACKED FROM A PHOTO.',
     bodyText: 'Snap your meal & get full breakdown.',
@@ -87,12 +92,12 @@ async function main() {
     },
   });
 
-  console.log(`Render dispatched! Render ID: ${renderId}`);
+  console.log('RENDER_STARTED');
+  console.log('RENDER_ID:', renderId);
 
-  console.log('5. Polling Render Progress...');
+  console.log('Polling Render Progress...');
   let completed = false;
   let finalUrl = '';
-  let renderStats = null;
 
   while (!completed) {
     await new Promise(r => setTimeout(r, 3000));
@@ -103,28 +108,27 @@ async function main() {
       region,
     });
 
-    console.log(`Progress: ${Math.round((progress.overallProgress || 0) * 100)}% - Status: ${progress.fatalErrorEncountered ? 'FAILED' : progress.done ? 'DONE' : 'RENDERING'}`);
+    const percent = Math.round((progress.overallProgress || 0) * 100);
+    console.log(`RENDER_PROGRESS: ${percent}%`);
 
     if (progress.fatalErrorEncountered) {
-      console.error('Fatal error encountered during Lambda render:', progress.errors);
-      throw new Error(`Render failed: ${JSON.stringify(progress.errors)}`);
+      console.error('RENDER_FAILED: Fatal error encountered during Lambda render:', progress.errors);
+      process.exit(1);
     }
 
     if (progress.done) {
       completed = true;
       finalUrl = progress.outputFile;
-      renderStats = progress;
     }
   }
 
   console.log('\n==================================================');
-  console.log('PRODUCTION AWS LAMBDA RENDER SUCCESSFUL!');
-  console.log('Render ID:', renderId);
-  console.log('Public HTTPS MP4 URL:', finalUrl);
+  console.log('RENDER_COMPLETED');
+  console.log('OUTPUT_URL:', finalUrl);
   console.log('==================================================\n');
 }
 
 main().catch(err => {
-  console.error('Production render failed:', err);
+  console.error('Production render failed:', err.message || err);
   process.exit(1);
 });
