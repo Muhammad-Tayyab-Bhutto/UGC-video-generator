@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
-import { ProductPageData } from '../scraper/product-extractor.js';
+import { ProductPageData } from '../scraper/product-extractor';
 
 export interface ProductAnalysis {
   productName: string;

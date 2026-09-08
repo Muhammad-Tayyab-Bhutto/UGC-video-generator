@@ -1,7 +1,7 @@
 import http from 'http';
 import https from 'https';
 import { URL } from 'url';
-import { validateUrlSecurity, normalizeAndValidateUrlFormat } from '../security/url-security.js';
+import { validateUrlSecurity, normalizeAndValidateUrlFormat } from '../security/url-security';
 
 export interface SafeFetchOptions {
   maxRedirects?: number;

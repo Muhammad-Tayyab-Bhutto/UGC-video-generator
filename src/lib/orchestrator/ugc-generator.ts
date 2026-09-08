@@ -1,8 +1,8 @@
-import { processProductUrl } from '../intelligence/pipeline.js';
-import { resolveAssets } from '../assets/asset-resolver.js';
-import { buildVideoCompositionProps } from '../assets/composition-props-builder.js';
-import { renderUgcVideo } from '../renderer/render-ugc-video.js';
-import { UgcGenerationResult } from '../../types/index.js';
+import { processProductUrl } from '../intelligence/pipeline';
+import { resolveAssets } from '../assets/asset-resolver';
+import { buildVideoCompositionProps } from '../assets/composition-props-builder';
+import { renderUgcVideo } from '../renderer/render-ugc-video';
+import { UgcGenerationResult } from '../../types';
 
 export async function generateUgcVideo(productUrl: string): Promise<UgcGenerationResult> {
   // 1. Intelligence Pipeline (SSRF Check, Safe Fetch, Extraction, Gemini Analysis)

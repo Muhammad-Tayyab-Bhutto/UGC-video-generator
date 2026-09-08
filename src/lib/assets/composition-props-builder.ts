@@ -1,4 +1,4 @@
-import { CreativePlan, ResolvedAssets, VideoCompositionProps } from '../../types/index.js';
+import { CreativePlan, ResolvedAssets, VideoCompositionProps } from '../../types';
 
 export function buildVideoCompositionProps(
   creativePlan: CreativePlan,

@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
-import { IntentResult, IntentType } from '../../types/index.js';
-import { normalizeAndValidateUrlFormat } from '../security/url-security.js';
+import { IntentResult, IntentType } from '../../types';
+import { normalizeAndValidateUrlFormat } from '../security/url-security';
 
 const intentResponseSchema = {
   type: SchemaType.OBJECT,
