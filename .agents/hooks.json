@@ -1,0 +1,19 @@
+{
+  "agent-logger": {
+    "enabled": true,
+    "PostInvocation": [
+      {
+        "type": "command",
+        "command": "python3 /home/muhammadtayyabbhutto/8x-assignment/scripts/capture_turn.py",
+        "timeout": 30
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 /home/muhammadtayyabbhutto/8x-assignment/scripts/capture_turn.py",
+        "timeout": 30
+      }
+    ]
+  }
+}
