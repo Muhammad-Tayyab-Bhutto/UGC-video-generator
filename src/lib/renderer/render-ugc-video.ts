@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { VideoCompositionProps, VideoResult } from '@/types';
-import { validateVideoCompositionProps } from '@/lib/validation/composition-props-validator';
+import { VideoCompositionProps, VideoResult } from '../../types/index.js';
+import { validateVideoCompositionProps } from '../validation/composition-props-validator.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
