@@ -88,8 +88,7 @@ async function main() {
     inputProps,
     codec: 'h264',
     downloadBehavior: {
-      type: 'public',
-      fileName: 'output.mp4',
+      type: 'play-in-browser',
     },
   });
 
