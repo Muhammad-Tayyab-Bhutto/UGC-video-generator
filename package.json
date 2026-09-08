@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node test_production_runner.mjs",
     "remotion:preview": "remotion preview src/remotion/index.ts",
     "remotion:render": "remotion render src/remotion/index.ts UGCVideo renders/output.mp4"
   },
