@@ -12,6 +12,7 @@ export function buildVideoCompositionProps(
     backgroundType: assets.backgroundType,
     gifUrl: assets.gifUrl,
     audioUrl: assets.audioUrl,
+    voiceoverUrl: assets.voiceoverUrl,
     durationInFrames: 210, // Trusted constant (~7 seconds)
     fps: 30,               // Trusted constant (30 FPS)
   };

@@ -15,6 +15,7 @@ export interface CreativePlan {
   hookText: string;
   bodyText: string;
   ctaText: string;
+  voiceoverScript: string;
   visualKeywords: string[];
   gifSearchQuery: string;
   gifIntent: string;
@@ -51,6 +52,7 @@ const responseSchema = {
         hookText: { type: SchemaType.STRING },
         bodyText: { type: SchemaType.STRING },
         ctaText: { type: SchemaType.STRING },
+        voiceoverScript: { type: SchemaType.STRING },
         visualKeywords: {
           type: SchemaType.ARRAY,
           items: { type: SchemaType.STRING },
@@ -62,7 +64,7 @@ const responseSchema = {
           enum: ['upbeat', 'playful', 'focused', 'energetic', 'calm', 'dramatic'],
         },
       },
-      required: ['hookText', 'bodyText', 'ctaText', 'visualKeywords', 'gifSearchQuery', 'gifIntent', 'audioMood'],
+      required: ['hookText', 'bodyText', 'ctaText', 'voiceoverScript', 'visualKeywords', 'gifSearchQuery', 'gifIntent', 'audioMood'],
     },
   },
   required: ['productAnalysis', 'creativePlan'],
@@ -100,6 +102,7 @@ COPYWRITING REQUIREMENTS:
 - HOOK: Short, attention-grabbing, product-specific (all caps, under 7 words). Avoid generic openers like "Transform your life!" or "Game changer!".
 - BODY: One concise benefit-focused statement explaining the product's core value.
 - CTA: Clear, short call-to-action (under 4 words).
+- VOICEOVER SCRIPT: A natural, ad-style 1-sentence spoken audio script connecting hook + benefit + CTA. MUST be spoken aloud in under 6 seconds (under 22 words). Example: "Tracking calories shouldn't be hard. Snap your meal, let CalAI track it, and hit your goals." DO NOT include URLs or hashtags.
 - GIF SEARCH QUERY & INTENT: Specify a reaction GIF search term (e.g., "mind blown reaction") AND the creative intent behind showing it.
 - AUDIO MOOD: Pick exactly one from: upbeat, playful, focused, energetic, calm, dramatic.
 
@@ -151,7 +154,7 @@ export function validateProductIntelligenceRuntime(data: unknown): asserts data 
   }
   if (!Array.isArray(pa.keyFeatures)) throw new Error('productAnalysis.keyFeatures must be an array');
 
-  const reqCpFields = ['hookText', 'bodyText', 'ctaText', 'visualKeywords', 'gifSearchQuery', 'gifIntent', 'audioMood'];
+  const reqCpFields = ['hookText', 'bodyText', 'ctaText', 'voiceoverScript', 'visualKeywords', 'gifSearchQuery', 'gifIntent', 'audioMood'];
   for (const f of reqCpFields) {
     if (!cp[f]) throw new Error(`creativePlan missing required field: ${f}`);
   }

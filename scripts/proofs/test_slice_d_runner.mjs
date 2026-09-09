@@ -32,6 +32,7 @@ async function runSliceDTests() {
     hookText: 'BUILD PRODUCTS FASTER WITH AI',
     bodyText: 'Streamline your product development with AI workflows.',
     ctaText: 'Try Linear free',
+    voiceoverScript: 'Build products faster with AI. Streamline your product development and try Linear free.',
     visualKeywords: ['software', 'planning', 'developer'],
     gifSearchQuery: 'fast success reaction',
     gifIntent: 'Show speed of development',

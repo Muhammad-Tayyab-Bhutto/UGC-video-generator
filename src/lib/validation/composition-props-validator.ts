@@ -60,6 +60,14 @@ export function validateVideoCompositionProps(props: unknown): VideoCompositionP
     throw new Error(`Invalid audioUrl format: "${p.audioUrl}"`);
   }
 
+  if (p.voiceoverUrl !== undefined && typeof p.voiceoverUrl !== 'string') {
+    throw new Error('VideoCompositionProps.voiceoverUrl must be a string if provided.');
+  }
+
+  if (typeof p.voiceoverUrl === 'string' && p.voiceoverUrl.trim() && !isValidUrlOrPath(p.voiceoverUrl)) {
+    throw new Error(`Invalid voiceoverUrl format: "${p.voiceoverUrl}"`);
+  }
+
   return {
     hookText: (p.hookText as string).trim(),
     bodyText: (p.bodyText as string).trim(),
@@ -68,6 +76,8 @@ export function validateVideoCompositionProps(props: unknown): VideoCompositionP
     backgroundType: p.backgroundType as 'image' | 'video',
     gifUrl: (p.gifUrl as string).trim(),
     audioUrl: (p.audioUrl as string).trim(),
+    voiceoverUrl: typeof p.voiceoverUrl === 'string' ? p.voiceoverUrl.trim() : undefined,
+    voiceoverDuration: typeof p.voiceoverDuration === 'number' ? p.voiceoverDuration : undefined,
     durationInFrames: typeof p.durationInFrames === 'number' ? p.durationInFrames : 210,
     fps: typeof p.fps === 'number' ? p.fps : 30,
   };

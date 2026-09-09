@@ -139,6 +139,11 @@ async function runTests() {
   assert.throws(() => validateVideoCompositionProps({ ...validProps, backgroundType: 'audio' }), /backgroundType/);
   assert.throws(() => validateVideoCompositionProps({ ...validProps, backgroundUrl: 'not-a-url' }), /backgroundUrl/);
   assert.throws(() => validateVideoCompositionProps({ ...validProps, gifUrl: 'invalid' }), /gifUrl/);
+  assert.throws(() => validateVideoCompositionProps({ ...validProps, voiceoverUrl: 123 }), /voiceoverUrl/);
+  assert.throws(() => validateVideoCompositionProps({ ...validProps, voiceoverUrl: 'not-a-url' }), /voiceoverUrl/);
+
+  const voProps = validateVideoCompositionProps({ ...validProps, voiceoverUrl: 'https://example.com/voiceover.mp3' });
+  assert.strictEqual(voProps.voiceoverUrl, 'https://example.com/voiceover.mp3');
   console.log('✓ Test 10 PASS');
 
   // Test 11: Second Non-CalAI Fixture (FocusFlow)

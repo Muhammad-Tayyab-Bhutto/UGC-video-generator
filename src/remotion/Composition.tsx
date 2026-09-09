@@ -20,6 +20,7 @@ export const MainComposition: React.FC<VideoCompositionProps> = ({
   backgroundType,
   gifUrl,
   audioUrl,
+  voiceoverUrl,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -74,6 +75,9 @@ export const MainComposition: React.FC<VideoCompositionProps> = ({
 
   // Background subtle zoom
   const bgScale = interpolate(frame, [0, 210], [1, 1.15]);
+
+  // Audio Ducking: If voiceover is present, duck background music volume to 0.15 for clarity
+  const bgMusicVolume = voiceoverUrl ? 0.15 : 0.8;
 
   return (
     <AbsoluteFill style={{ backgroundColor: '#000', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
@@ -238,11 +242,44 @@ export const MainComposition: React.FC<VideoCompositionProps> = ({
         )}
       </AbsoluteFill>
 
-      {/* 4. Audio Layer */}
+      {/* Voiceover Active Indicator / Caption Tag */}
+      {voiceoverUrl && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 60,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            color: '#00F0FF',
+            padding: '10px 24px',
+            borderRadius: '20px',
+            fontSize: 22,
+            fontWeight: 700,
+            letterSpacing: '0.5px',
+            zIndex: 40,
+            border: '1px solid rgba(0, 240, 255, 0.4)',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <span>🔊 AI Voiceover</span>
+        </div>
+      )}
+
+      {/* 4. Audio Layers: Primary Voiceover + Ducked Background Music */}
+      {voiceoverUrl && (
+        <Audio
+          src={voiceoverUrl.startsWith('/') ? staticFile(voiceoverUrl) : voiceoverUrl}
+          volume={1.0}
+        />
+      )}
       {audioUrl && (
         <Audio
           src={audioUrl.startsWith('/') ? staticFile(audioUrl) : audioUrl}
-          volume={0.8}
+          volume={bgMusicVolume}
         />
       )}
     </AbsoluteFill>

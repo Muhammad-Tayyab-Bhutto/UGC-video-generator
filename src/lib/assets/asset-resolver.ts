@@ -1,5 +1,6 @@
 import { validateUrlSecurity, normalizeAndValidateUrlFormat } from '../security/url-security';
 import { ProductPageData, ProductAnalysis, CreativePlan, ResolvedAssets } from '../../types';
+import { generateVoiceover } from '../tts/tts-generator';
 
 export interface ResolveAssetsInput {
   pageData: ProductPageData;
@@ -86,14 +87,47 @@ export async function resolveAssets(input: ResolveAssetsInput): Promise<Resolved
   const audioUrl = BUNDLED_AUDIO_MAP[creativePlan.audioMood] || BUNDLED_AUDIO_MAP.focused;
   const audioSource: ResolvedAssets['audioSource'] = 'bundled';
 
+  // 5. Resolve Voiceover Asset with Duration Check & Fallback
+  let voiceoverUrl: string | undefined = undefined;
+  let voiceoverSource: ResolvedAssets['voiceoverSource'] = undefined;
+
+  if (creativePlan.voiceoverScript) {
+    try {
+      let ttsRes = await generateVoiceover(creativePlan.voiceoverScript);
+
+      // Duration Check: Max composition length is ~7 seconds (210 frames @ 30fps). Allow up to 10.0s for natural speech.
+      if (ttsRes && ttsRes.durationSeconds > 10.0) {
+        console.warn(`[TTS] Voiceover duration (${ttsRes.durationSeconds.toFixed(2)}s) exceeds max composition length. Attempting bounded script shortening...`);
+        const shortenedScript = `${creativePlan.hookText} ${creativePlan.ctaText}`;
+        const retryRes = await generateVoiceover(shortenedScript);
+        if (retryRes) {
+          ttsRes = retryRes;
+        }
+      }
+
+      if (ttsRes && ttsRes.durationSeconds <= 10.0) {
+        voiceoverUrl = ttsRes.audioUrl;
+        voiceoverSource = ttsRes.provider;
+      } else if (ttsRes) {
+        console.warn(`[TTS] Voiceover duration (${ttsRes.durationSeconds.toFixed(2)}s) still exceeds max composition duration. Graceful fallback to music + text.`);
+        voiceoverSource = 'fallback';
+      }
+    } catch (ttsErr) {
+      console.warn('[TTS] Voiceover generation failed. Gracefully falling back to background music:', ttsErr);
+      voiceoverSource = 'fallback';
+    }
+  }
+
   return {
     backgroundUrl,
     backgroundType,
     gifUrl,
     audioUrl,
+    voiceoverUrl,
     backgroundSource,
     gifSource,
     audioSource,
+    voiceoverSource,
   };
 }
 

@@ -51,6 +51,7 @@ export interface CreativePlan {
   hookText: string;
   bodyText: string;
   ctaText: string;
+  voiceoverScript: string;
   visualKeywords: string[];
   gifSearchQuery: string;
   gifIntent: string;
@@ -62,9 +63,11 @@ export interface ResolvedAssets {
   backgroundType: 'video' | 'image';
   gifUrl: string;
   audioUrl: string;
+  voiceoverUrl?: string;
   backgroundSource: 'product-image' | 'pexels' | 'fallback';
   gifSource: 'giphy' | 'fallback';
   audioSource: 'bundled';
+  voiceoverSource?: 'polly' | 'google-tts' | 'fallback';
 }
 
 export interface VideoCompositionProps {
@@ -75,6 +78,8 @@ export interface VideoCompositionProps {
   backgroundType: 'video' | 'image';
   gifUrl: string;
   audioUrl: string;
+  voiceoverUrl?: string;
+  voiceoverDuration?: number;
   durationInFrames: number;
   fps: number;
 }

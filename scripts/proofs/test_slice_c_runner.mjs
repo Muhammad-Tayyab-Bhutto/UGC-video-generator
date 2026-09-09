@@ -171,6 +171,7 @@ async function runSliceCTests() {
       hookText: 'STOP WASTING HOURS ON DISTRACTIONS.',
       bodyText: 'FocusFlow blocks interruptions and structures deep work sessions.',
       ctaText: 'GET FOCUSFLOW FREE',
+      voiceoverScript: 'Stop wasting hours on distractions. FocusFlow blocks interruptions so you get deep work done.',
       visualKeywords: ['focus', 'timer', 'minimalist workspace'],
       gifSearchQuery: 'mind blown reaction',
       gifIntent: 'Reaction to finishing a 4-hour deep work streak',
