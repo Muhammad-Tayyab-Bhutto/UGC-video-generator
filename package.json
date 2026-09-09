@@ -12,6 +12,7 @@
     "remotion:render": "remotion render src/remotion/index.ts UGCVideo renders/output.mp4"
   },
   "dependencies": {
+    "@aws-sdk/client-polly": "3.986.0",
     "@google/generative-ai": "^0.24.1",
     "@remotion/bundler": "4.0.522",
     "@remotion/cli": "4.0.522",
